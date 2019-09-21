@@ -10,7 +10,7 @@ unset GIT_DIR     # Avoid GIT_DIR leak from previous build steps
 ### Constants
 
 # This is used by the buildpack stdlib for metrics
-# shellcheck disable=SC2034 
+# shellcheck disable=SC2034
 BPLOG_PREFIX="buildpack.nodejs"
 
 ### Configure directories
@@ -96,7 +96,7 @@ meta_set "build-step" "init"
 features_init "nodejs" "$BUILD_DIR" "$CACHE_DIR" "$BP_DIR/features"
 log_initial_state
 generate_uuids
- 
+
 ### Failures that should be caught immediately
 
 fail_dot_heroku "$BUILD_DIR"
@@ -297,23 +297,11 @@ prune_devdependencies() {
   fi
 }
 
-# if we are using yarn
-# and in the new feature
-# and we're using the default cache directories
-# then save off the cache after we prune out devDepenencies
-if [[ "$YARN" == "true" ]] || [[ $(features_get "cache-native-yarn-cache") == "true" ]] || [[ "$(get_cache_directories "$BUILD_DIR")" == "" ]]; then
-  meta_set "build-step" "prune-dependencies"
-  header "Pruning devDependencies" | output "$LOG_FILE"
-  prune_devdependencies | output "$LOG_FILE"
-  meta_set "build-step" "save-cache"
-  cache_build | output "$LOG_FILE"
-else
-  meta_set "build-step" "save-cache"
-  cache_build | output "$LOG_FILE"
-  meta_set "build-step" "prune-dependencies"
-  header "Pruning devDependencies" | output "$LOG_FILE"
-  prune_devdependencies | output "$LOG_FILE"
-fi
+meta_set "build-step" "save-cache"
+cache_build | output "$LOG_FILE"
+meta_set "build-step" "prune-dependencies"
+header "Pruning devDependencies" | output "$LOG_FILE"
+prune_devdependencies | output "$LOG_FILE"
 
 summarize_build() {
   if $NODE_VERBOSE; then
